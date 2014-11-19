@@ -155,7 +155,7 @@ of Snappy.
 
 ### Iteration: Priv, Next and First and Last
 
-See the [eunit test cases](https://github.com/tatsuya6502/h2leveldb/blob/master/test/eunit/h2leveldb_test.erl).
+See the [eunit test cases](https://github.com/leveldb-erlang/h2leveldb/blob/master/test/eunit/h2leveldb_test.erl).
 
 
 ## Adding h2leveldb to Your Project
