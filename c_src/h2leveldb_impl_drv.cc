@@ -231,7 +231,8 @@ static ErlDrvEntry drv_driver_entry = {
     (int) ERL_DRV_FLAG_USE_PORT_LOCKING,
     NULL,
     NULL,
-    NULL
+    NULL,
+    NULL   // emergency_close
 };
 
 DRIVER_INIT (h2leveldb_impl_drv) // must match name in driver_entry
