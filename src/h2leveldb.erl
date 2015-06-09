@@ -74,6 +74,12 @@
          prev_key/3
         ]).
 
+-export([fold_keys/6,
+         fold_keys/7,
+         fold_kvs/6,
+         fold_kvs/7
+        ]).
+
 %% gen_server callbacks
 -export([init/1,
          handle_call/3,
@@ -285,15 +291,14 @@ delete(DB, Key) ->
 delete(DB, Key, WriteOptions) ->
     call(DB, {?H2LDB_DELETE3, Key, WriteOptions}).
 
--spec get(db(), key()) -> {ok, key()} | key_not_exist | {error, io_error}.
+-spec get(db(), key()) -> {ok, value()} | key_not_exist | {error, io_error}.
 get(DB, Key) ->
     get(DB, Key, []).
 
 -spec get(db(), key(), [read_option()]) ->
-                 {ok, key()} | key_not_exist | {error, io_error}.
+                 {ok, value()} | key_not_exist | {error, io_error}.
 get(DB, Key, ReadOptions) ->
     call(DB, {?H2LDB_GET3, Key, ReadOptions}).
-
 
 -spec put(db(), key(), value()) -> ok | {error, io_error}.
 put(DB, Key, Value) ->
@@ -420,6 +425,71 @@ prev_key(DB, Key) ->
                       {ok, key()} | end_of_table | {error, io_error}.
 prev_key(DB, Key, ReadOptions) ->
     call(DB, {?H2LDB_PREV3, Key, ReadOptions}).
+
+
+%%%-----------------------------------------------------------------------------
+%%% API - Key-Value Iteration Operations (fold_kvs, fold_keys)
+%%%-----------------------------------------------------------------------------
+
+%% Start, inclusive
+%% End, inclusive
+-spec fold_keys(db(), fun((key(), AccIn::term()) -> AccOut::term()),
+                Acc0::term(),
+                StartKey::key() | undefined, StopKey::key() | undefined,
+                NumItems::non_neg_integer()) ->
+                       {ok, Acc1::term(), IsTruncated::boolean()}
+                           | {error, io_error}.
+fold_keys(DB, Fun, Acc0, Start, Stop, NumItems) ->
+    fold_keys(DB, Fun, Acc0, Start, Stop, NumItems, []).
+
+%% Start, inclusive
+%% End, inclusive
+-spec fold_keys(db(), fun((key(), AccIn::term()) -> AccOut::term()),
+                Acc0::term(),
+                StartKey::key() | undefined, StopKey::key() | undefined,
+                NumItems::non_neg_integer(),
+                [read_option()]) ->
+                       {ok, Acc1::term(), IsTruncated::boolean()}
+                           | {error, io_error}.
+fold_keys(DB, Fun, Acc0, Start, Stop, NumItems, ReadOptions) ->
+    case find_first_key_for_fold(DB, Start, ReadOptions) of
+        {ok, _}=Key ->
+            fold_keys1(DB, Fun, Acc0, Key, Stop, NumItems, ReadOptions);
+        end_of_table ->
+            {ok, Acc0, false};
+        {error, _}=Err ->
+            Err
+    end.
+
+%% Start, inclusive
+%% End, inclusive
+-spec fold_kvs(db(), fun(({key(), value()}, AccIn::term()) -> AccOut::term()),
+               Acc0::term(),
+               StartKey::key() | undefined, StopKey::key() | undefined,
+               NumItems::non_neg_integer()) ->
+                      {ok, Acc1::term(), IsTruncated::boolean()}
+                          | {error, io_error}.
+fold_kvs(DB, Fun, Acc0, Start, Stop, NumItems) ->
+    fold_kvs(DB, Fun, Acc0, Start, Stop, NumItems, []).
+
+%% Start, inclusive
+%% End, inclusive
+-spec fold_kvs(db(), fun(({key(), value()}, AccIn::term()) -> AccOut::term()),
+               Acc0::term(),
+               StartKey::key() | undefined, StopKey::key() | undefined,
+               NumItems::non_neg_integer(),
+               [read_option()]) ->
+                      {ok, Acc1::term(), IsTruncated::boolean()}
+                          | {error, io_error}.
+fold_kvs(DB, Fun, Acc0, Start, Stop, NumItems, ReadOptions) ->
+    case find_first_key_for_fold(DB, Start, ReadOptions) of
+        {ok, _}=Key ->
+            fold_kvs1(DB, Fun, Acc0, Key, Stop, NumItems, ReadOptions);
+        end_of_table ->
+            {ok, Acc0, false};
+        {error, _}=Err ->
+            Err
+    end.
 
 
 %% ====================================================================
@@ -661,4 +731,53 @@ call(DB, Tuple) ->
             {error, io_error};
         {_DB, ?H2LDB_NOT_IMPLEMENTED} ->
             erlang:error(not_implemented)
+    end.
+
+find_first_key_for_fold(DB, undefined, ReadOptions) ->
+    first_key(DB, ReadOptions);
+find_first_key_for_fold(DB, Key, ReadOptions) ->
+    case get(DB, Key, ReadOptions) of
+        {ok, _} ->
+            {ok, Key};
+        key_not_exist ->
+            next_key(DB, Key, ReadOptions);
+        {error, _}=Err ->
+            Err
+    end.
+
+fold_keys1(_DB, _Fun, _AccIn, {error, _}=Err, _Stop, _NumItems, _ReadOptions) ->
+    Err;
+fold_keys1(_DB, _Fun, AccIn, end_of_table, _Stop, _NumItems, _ReadOptions) ->
+    {ok, lists:reverse(AccIn), false};
+fold_keys1(_DB, _Fun, AccIn, _Key, _Stop, NumItems, _ReadOptions) when NumItems =< 0 ->
+    {ok, lists:reverse(AccIn), true};
+fold_keys1(_DB, _Fun, AccIn, {ok, Key}, Stop,
+         _NumItems, _ReadOptions) when Stop =/= undefined, Key > Stop ->
+    {ok, lists:reverse(AccIn), false};
+fold_keys1(DB, Fun, AccIn, {ok, Key}, Stop, NumItems, ReadOptions) ->
+    AccOut = Fun(Key, AccIn),
+    NextKey = next_key(DB, Key, ReadOptions),
+    fold_keys1(DB, Fun, AccOut, NextKey, Stop, NumItems - 1, ReadOptions).
+
+fold_kvs1(_DB, _Fun, _AccIn, {error, _}=Err, _Stop, _NumItems, _ReadOptions) ->
+    Err;
+fold_kvs1(_DB, _Fun, AccIn, end_of_table, _Stop, _NumItems, _ReadOptions) ->
+    {ok, lists:reverse(AccIn), false};
+fold_kvs1(_DB, _Fun, AccIn, _Key, _Stop, NumItems, _ReadOptions) when NumItems =< 0 ->
+    {ok, lists:reverse(AccIn), true};
+fold_kvs1(_DB, _Fun, AccIn, {ok, Key}, Stop,
+         _NumItems, _ReadOptions) when Stop =/= undefined, Key > Stop ->
+    {ok, lists:reverse(AccIn), false};
+fold_kvs1(DB, Fun, AccIn, {ok, Key}, Stop, NumItems, ReadOptions) ->
+    case get(DB, Key, ReadOptions) of
+        {ok, Value} ->
+            AccOut = Fun({Key, Value}, AccIn),
+            NextKey = next_key(DB, Key, ReadOptions),
+            fold_kvs1(DB, Fun, AccOut, NextKey, Stop, NumItems - 1, ReadOptions);
+        key_not_exist ->
+            %% Race condition: The Key has been deleted by other process
+            NextKey = next_key(DB, Key, ReadOptions),
+            fold_kvs1(DB, Fun, AccIn, NextKey, Stop, NumItems, ReadOptions);
+        {error, _}=Err ->
+            Err
     end.
