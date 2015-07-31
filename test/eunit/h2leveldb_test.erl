@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2014 by Tatsuya Kawano <tatsuya@hibaridb.org>
+%%% Copyright (C) 2014-2015 by Tatsuya Kawano <tatsuya@hibaridb.org>
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
 %%% of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,16 @@
 -module(h2leveldb_test).
 
 -include_lib("eunit/include/eunit.hrl").
+
+%% We don't want warnings about the use of erlang:now/0 in
+%% this module.
+-compile(nowarn_deprecated_function).
+%%
+%% We don't use
+%%   -compile({nowarn_deprecated_function, [{erlang, now, 0}]}).
+%% since this will produce warnings when compiled on systems
+%% where it has not yet been deprecated.
+%%
 
 -define(H2LEVELDB, h2leveldb).
 
@@ -269,7 +279,15 @@ read_and_prev(_, Key, _, _, _) ->
     error({key, Key, must_not_exist}).
 
 make_temp_db_path() ->
-    {MegaSecs, Secs, MicroSecs} = erlang:now(),
+    {MegaSecs, Secs, MicroSecs} = timestamp(),
     FileName = io_lib:format("h2leveldb-test-~w-~w-~w.leveldb",
                              [MegaSecs, Secs, MicroSecs]),
     filename:join("/tmp", FileName).
+
+timestamp() ->
+    try
+        erlang:timestamp()
+    catch
+        error:undef ->
+            erlang:now()
+    end.
