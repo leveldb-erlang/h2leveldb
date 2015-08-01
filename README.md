@@ -1,7 +1,7 @@
 
 ## h2leveldb - HyperLevelDB bindings for Erlang/OTP
 
-Copyright (c) 2014 by Tatsuya Kawano
+Copyright (c) 2014-2015 by Tatsuya Kawano
 
 **Authors:** Tatsuya Kawano ([`tatsuya@hibaridb.org`](mailto:tatsuya@hibaridb.org)).
 Also see the [Credits](#credits) chapter. h2leveldb borrowed port
@@ -162,11 +162,12 @@ See the [eunit test cases](https://github.com/leveldb-erlang/h2leveldb/blob/mast
 
 ### Requirements
 
-#### Erlang/OTP R16B or Newer (Including 17.x)
+#### Erlang/OTP 18, 17 and R16B
 
 Recently tested with:
 
-- Erlang/OTP 17.3 (64 bit)
+- Erlang/OTP 18.0 (64 bit)
+- Erlang/OTP 17.5 (64 bit)
 - Erlang/OTP R16B03-1 (64 bit)
 
 #### Unix like OS such as GNU/Linux, BSD and illumos(*1)
@@ -181,69 +182,27 @@ script.
 
 **Recently tested with:**
 
-I develop and regularly test h2leveldb on the following platforms.
+I am developing and regularly testing h2leveldb on the following
+platforms.
 
-| OS        |            | Release      | Arch   | Compiler  | Erlang/OTP     | File System |
-|:----------|:-----------|:-------------|:-------|:----------|----------------|:------------|
-| GNU/Linux | Arch Linux | 2014.05.01   | x86_64 | GCC 4.9.0 | 17.3, R16B03-1 | XFS         |
-| BSD       | FreeBSD    | 10.0-RELEASE | amd64  | Clang 3.3 | 17.3, R16B03-1 | ZFS         |
-| illumos   | SmartOS    | pkgin 2014Q1 | amd64  | GCC 4.7.3 | R16B02         | ZFS         |
+| OS        |            | Release          | Arch   | Compiler    | Erlang/OTP           | File System |
+|:----------|:-----------|:-----------------|:-------|:------------|----------------------|:------------|
+| GNU/Linux | Arch Linux | 2015.07.01       | x86_64 | GCC 5.2.0   | 18.0, 17.5, R16B03-1 | XFS         |
+| BSD       | FreeBSD    | 10.1-RELEASE-p16 | amd64  | Clang 3.4.1 | 18.0, 17.5, R16B03-1 | ZFS         |
+| illumos   | SmartOS    | pkgin 2014Q1     | amd64  | GCC 4.7.3   | R16B02               | ZFS         |
 
 **Other platforms:**
 
-In addition to above, I tried the following platform(s) to see if
-I can build h2leveldb.
+In addition to above, I tried the following platforms to see if
+I can build and run h2leveldb.
 
 | OS        |            | Release      | Arch   | Compiler  | Erlang/OTP     | File System |
 |:----------|:-----------|:-------------|:-------|:----------|:---------------|:------------|
+| GNU/Linux | CentOS 7   | 7.1.1503     | x86_64 | GCC 4.8.3 | 18.0, 17.5     | XFS         |
+| GNU/Linux | CentOS 6   | 6.6          | x86_64 | GCC 4.4.7 | 18.0, 17.5     | EXT4        |
 | illumos   | OmniOS     | r151008j-r1  | amd64  | GCC 4.8.1 | 17.0           | ZFS         |
 
-**TODO**:
-
-- (**TODO**) Try CentOS 7.0 x86_64.
-- (**TODO**) Solve the build issue in CentOS 6.5 x86_64.
 - (**TODO**) Try Ubuntu "Trusty" 14.04 LTS x86_64.
-
-##### No CentOS 6.x?
-
-I was not able to build Snappy on CentOS 6.5 due to an error in
-autoconf. Maybe I am missing some packages? Any help will be
-appreciated.
-
-```sh
-$ autoconf --version
-autoconf (GNU Autoconf) 2.63
-...
-
-$ libtool --version
-ltmain.sh (GNU libtool) 2.2.6b
-...
-
-$ g++ --version
-g++ (GCC) 4.4.7 20120313 (Red Hat 4.4.7-4)
-...
-
-$ make compile
-...
-==> h2leveldb (compile)
-configure.ac:16: warning: macro `AM_PROG_AR' not found in library
-...
-
-configure.ac:16: error: possibly undefined macro: AM_PROG_AR
-      If this token and others are legitimate, please use m4_pattern_allow.
-      See the Autoconf documentation.
-ERROR: Command [compile] failed!
-make: *** [compile] Error 1
-```
-
-### Update rebar.config in Your Project
-
-Add the following dependency to `rebar.confg`.
-
-```erlang
-(**TODO**)
-
-```
 
 ### Install Build Dependencies
 
@@ -251,10 +210,47 @@ h2leveldb requires **GNU Autotools** and their dependencies. It also
 requires **git** to download HyperLevelDB and Snappy source codes. Of
 course, you need **Erlang/OTP R16B or newer**.
 
-#### GNU/Linux - Fedora, RHEL, CentOS
+#### GNU/Linux - Fedora, RHEL 7, CentOS 7
 
 ```sh
 $ sudo yum install gcc gcc-c++ make autoconf automake libtool git
+```
+
+#### GNU/Linux - RHEL 6 and CentOS 6
+
+```sh
+$ sudo yum install gcc gcc-c++ make libtool git wget
+```
+
+autoconf and automake in RHEL 6/Cent OS 6 yum repositories will be too
+old to build Snappy. Build and install the latest version from source.
+
+**autoconf**
+
+```sh
+$ cd /tmp
+$ wget http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
+$ tar xvf autoconf-2.69.tar.gz
+$ cd autoconf-2.69
+$ ./configure --prefix=/usr
+$ make
+$ sudo make install
+$ cd ..
+$ rm -rf autoconf-2.69*
+```
+
+**automake**
+
+```sh
+$ cd /tmp
+$ wget http://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz
+$ tar xvf automake-1.15.tar.gz
+$ cd automake-1.15
+$ ./configure --prefix=/usr
+$ make
+$ sudo make install
+$ cd ..
+$ rm -rf automake-1.15*
 ```
 
 #### GNU/Linux - Debian, Ubuntu
@@ -300,6 +296,9 @@ I installed Erlang/OTP (R16B02) from pkgin.
 $ sudo pkgin in erlang
 ```
 
+- **TODO**: Build and install Erlang
+  * e.g http://christophermeiklejohn.com/ruby/smartos/2013/10/15/erlang-on-smartos.html
+
 #### illumos - OmniOS
 
 Erlang/OTP in the official package repository is too old and cannot be
@@ -311,31 +310,30 @@ Install develop essentials.
 ```sh
 $ sudo pkg install developer/gcc48
 $ sudo pkg install \
-   developer/object-file \
-   developer/linker \
-   developer/library/lint \
    developer/build/gnu-make \
+   developer/library/lint \
+   developer/linker \
+   developer/object-file \
    system/header \
-   system/library/math/header-math \
-   developer/object-file
+   system/library/math/header-math
 ```
 
 Install Erlang/OTP dependencies.
 
 ```sh
 $ sudo pkg install \
+   archiver/gnu-tar \
+   developer/build/autoconf \
    library/ncurses \
    library/security/openssl \
-   developer/build/autoconf \
    network/netcat \
-   web/ca-bundle \
-   archiver/gnu-tar
+   web/ca-bundle
 ```
 
 Set up [Kerl](https://github.com/spawngrid/kerl), and build Erlang/OTP
-with it. By some reason, I was not able to build 17.0 with
-`--disable-hipe` due to a compile error. So I used `--enable-hipe`
-option but I do not know if this is a right thing to do.
+with it. I was not able to build 17.0 with `--disable-hipe` due to a
+compile error. So I used `--enable-hipe` option but I do not know if
+this is a right thing to do.
 
 ```sh
 $ echo 'KERL_CONFIGURE_OPTIONS="--enable-hipe --enable-smp-support --enable-threads --enable-kernel-poll" ' > ~/.kerlrc
@@ -394,7 +392,7 @@ $ ./rebar compile
   * On SmartOS, you need to create a ZFS dataset and delegate it to
     your zone to achieve this.
 - h2leveldb uses Snappy compression by default, you might want to
-  turn off compression on ZFS.
+  turn off compression at ZFS dataset.
 - As a general rule, adding a separate spindle (HDD) for ZIL and an
   SSD partition for L2ARC will improve performance.
 
