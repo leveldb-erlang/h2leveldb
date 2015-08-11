@@ -30,6 +30,7 @@
 -export([create_db/1,
          create_db/2,
          get_db/1,
+         get_db/2,
          close_db/1,
          destroy_db/1,
          repair_db/1,
@@ -234,11 +235,15 @@ create_db(Path, Options) ->
 %% the path.
 -spec get_db(Path::file:path()) -> {ok, db()} | {error, io_error}.
 get_db(Path) ->
+    get_db(Path, []).
+
+-spec get_db(Path::file:path(), Options::[option()]) -> {ok, db()} | {error, io_error}.
+get_db(Path, Options) ->
     case ets:lookup(?ETS_REG_NAME, Path) of
         [{Path, DB}] ->
             {ok, DB};
         [] ->
-            gen_server:call(?SERVER_REG_NAME, {open_db, Path, []}, ?TIMEOUT)
+            gen_server:call(?SERVER_REG_NAME, {open_db, Path, Options}, ?TIMEOUT)
     end.
 
 -spec close_db(Path::file:path()) -> ok | {error, not_opened} | {error, io_error}.
