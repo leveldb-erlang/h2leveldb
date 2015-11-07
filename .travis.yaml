@@ -1,0 +1,7 @@
+language: erlang
+script: "make clean deps compile xref test"
+otp_release:
+  - 18.1
+  - 17.5
+  # DISABLED: https://github.com/leveldb-erlang/h2leveldb/issues/1#issuecomment-102654760
+  # - R16B03-1
