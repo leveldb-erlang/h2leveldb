@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # The MIT License
 #
@@ -23,7 +23,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-set -e
+set -e -o pipefail
 
 # Snappy 1.1.2
 SNAPPY_VSN=1ff9be9b8fafc8528ca9e055646f5932aa5db9c4
@@ -58,13 +58,11 @@ case "$PLATFORM" in
         ;;
     solaris)
         # Only tested with OmniOS and SmartOS
-        set -o pipefail
         MAKE=gmake
         CONFENV='CC=gcc CXX=g++'
         TAR=gtar
         ;;
     *)
-        set -o pipefail
         MAKE=make
         CONFENV=''
         TAR=tar
