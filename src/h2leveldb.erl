@@ -34,7 +34,9 @@
          close_db/1,
          destroy_db/1,
          repair_db/1,
-         repair_db/2]).
+         repair_db/2,
+         backup_db/2
+        ]).
 
 %% Not implemented.
 %% -export([info_memory/1,
@@ -96,7 +98,7 @@
 %%%----------------------------------------------------------------------
 
 %% @TODO Move types to an .hrl file.
--expert_type([db/0,
+-export_type([db/0,
               write_batch/0
              ]).
 
@@ -151,6 +153,7 @@
 -define(H2LDB_PREV3,               16#0B).
 -define(H2LDB_PUT4,                16#0C).
 -define(H2LDB_WRITE_BATCH3,        16#0D).
+-define(H2LDB_BACKUP_DB,           16#0E).
 
 -define(H2LDB_BATCH_PUT,           16#00).
 -define(H2LDB_BATCH_DELETE,        16#01).
@@ -271,6 +274,10 @@ repair_db(Path) ->
 repair_db(Path, Options) ->
     gen_server:call(?SERVER_REG_NAME, {repair_db, Path, Options}, ?TIMEOUT).
 
+-spec backup_db(db(),binary()) -> ok | {error, io_error}.
+backup_db(DB,Name) ->
+  call(DB,{?H2LDB_BACKUP_DB,Name}).
+
 %% @TODO: Not implemented.
 %% -spec info_memory(DB::db()) -> term().
 %% info_memory(DB) ->
@@ -312,7 +319,6 @@ put(DB, Key, Value) ->
 -spec put(db(), key(), value(), [write_option()]) -> ok | {error, io_error}.
 put(DB, Key, Value, WriteOptions) ->
     call(DB, {?H2LDB_PUT4, Key, Value, WriteOptions}).
-
 
 %%%----------------------------------------------------------------------
 %%% API - Key-Value Operation (get_many)

@@ -63,6 +63,7 @@
 #define H2LDB_PREV3               0x0B
 #define H2LDB_PUT4                0x0C
 #define H2LDB_WRITE_BATCH3        0x0D
+#define H2LDB_BACKUP_DB           0x0E
 
 #define H2LDB_BATCH_PUT           0x00
 #define H2LDB_BATCH_DELETE        0x01
@@ -139,6 +140,8 @@ static void h2ldb_output_destroy_db1(DrvData* d, char* buf, ErlDrvSizeT len, int
 static void h2ldb_output_repair_db2(DrvData* d, char* buf, ErlDrvSizeT len, int* index, int items);
 static void h2ldb_output_close_db1(DrvData* d, char* buf, ErlDrvSizeT len, int* index, int items);
 static void h2ldb_async_close_db1(void* async_data);
+
+static void h2ldb_output_backup_db(DrvData* d, char* buf, ErlDrvSizeT len, int* index, int items);
 
 static void h2ldb_output_delete3(DrvData* d, char* buf, ErlDrvSizeT len, int* index, int items);
 static void h2ldb_async_delete3(void* async_data);
@@ -359,6 +362,11 @@ drv_output(ErlDrvData handle, char* buf, ErlDrvSizeT len)
         if (ng) GOTO_BADARG;
         h2ldb_output_close_db1(d, buf, len, &index, items);
         break;
+    case H2LDB_BACKUP_DB:
+        ng = (items != 1 || !d->impl.alive);
+        if (ng) GOTO_BADARG;
+        h2ldb_output_backup_db(d, buf, len, &index, items);
+        break;
     case H2LDB_DELETE3:
         ng = (items != 2 || !d->impl.alive);
         if (ng) GOTO_BADARG;
@@ -558,6 +566,7 @@ h2ldb_output_repair_db2(DrvData* d, char* buf, ErlDrvSizeT len, int* index, int 
     h2ldb_output_create_db2(REPAIR, d, buf, len, index, items);
 }
 
+
 static void
 h2ldb_output_close_db1(DrvData* d, char* buf, ErlDrvSizeT len, int* index, int items)
 {
@@ -682,6 +691,35 @@ h2ldb_output_delete3(DrvData* d, char* buf, ErlDrvSizeT len, int* index, int ite
 
  badarg:
     if (drv_async) { delete drv_async; }
+    driver_send_int(d, H2LDB_BADARG);
+    return;
+}
+
+static void
+h2ldb_output_backup_db(DrvData* d, char* buf, ErlDrvSizeT len, int* index, int items)
+{
+    (void) len;
+    (void) items;
+
+    int ng;
+    char *name;
+    long namelen;
+
+    leveldb::Status st;
+
+    ng = ei_inspect_binary(buf, index, (void**) &name, &namelen);
+    if (ng) GOTO_BADARG;
+
+
+    st = d->impl.db->LiveBackup(name);
+    if (!st.ok()) {
+      GOTO_BADARG;
+    }
+
+    driver_send_int(d, H2LDB_TRUE);
+    return;
+
+ badarg:
     driver_send_int(d, H2LDB_BADARG);
     return;
 }
@@ -1409,4 +1447,3 @@ h2ldb_async_write_batch3(void* async_data)
         a->reply = H2LDB_TRUE;
     }
 }
-

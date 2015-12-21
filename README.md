@@ -3,7 +3,7 @@
 
 Copyright (c) 2014-2015 by Tatsuya Kawano
 
-**Authors:** Tatsuya Kawano ([`tatsuya@hibaridb.org`](mailto:tatsuya@hibaridb.org)).
+**Authors:** Tatsuya Kawano ([`tatsuya@hibaridb.org`](mailto:tatsuya@hibaridb.org)), Mark Steele ([`mark@control-alt-del.org`](mailto:mark@control-alt-del.org)).
 Also see the [Credits](#credits) chapter. h2leveldb borrowed port
 driver C/C++ codes from LETS.
 
@@ -150,6 +150,56 @@ of Snappy.
         catch ok = h2leveldb:close_db(DBPath)
     end
 ```
+
+### Hot database backups
+
+To initiate a hot backup, use the `h2leveldb:backup_db/2` function:
+```
+[root@dev1 h2leveldb]# rebar shell
+==> h2leveldb (shell)
+Erlang/OTP 17 [erts-6.4] [source-2e19e2f] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false]
+
+Eshell V6.4  (abort with ^G)
+1>  h2leveldb:start_link([]).
+{ok,<0.43.0>}
+2>  DBPath = "/tmp/ldb.leveldb1".
+"/tmp/ldb.leveldb1"
+3> h2leveldb:repair_db(DBPath).
+ok
+4> {ok, DB} = h2leveldb:get_db(DBPath).
+{ok,#Port<0.4965>}
+5> timer:tc(fun() -> [ h2leveldb:put(DB, integer_to_binary(erlang:phash2(erlang:now())), crypto:strong_rand_bytes(1000)) || X <- lists:seq(1,10000)] end).
+{2663985,
+ [ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,
+  ok,ok,ok,ok,ok,ok,ok,ok|...]}
+6> h2leveldb:backup_db(DB,<<"foo">>).
+ok
+7> q().
+ok
+[root@dev1 h2leveldb]# ls -alh /tmp/ldb.leveldb1/
+total 148M
+drwxr-xr-x.  4 root root 4.0K Dec 20 23:48 .
+drwxrwxrwt. 17 root root 4.0K Dec 20 23:03 ..
+-rw-r--r--.  3 root root 8.9M Dec 20 23:32 000150.sst
+-rw-r--r--.  3 root root 8.9M Dec 20 23:32 000151.sst
+-rw-r--r--.  3 root root 5.6M Dec 20 23:32 000152.sst
+-rw-r--r--.  3 root root 3.5M Dec 20 23:32 000154.sst
+-rw-r--r--.  3 root root 8.3M Dec 20 23:39 000180.sst
+-rw-r--r--.  3 root root 6.3M Dec 20 23:39 000181.sst
+-rw-r--r--.  1 root root    0 Dec 20 23:48 000190.log
+-rw-r--r--.  2 root root 8.2M Dec 20 23:47 000191.sst
+-rw-r--r--.  2 root root 8.1M Dec 20 23:47 000192.sst
+-rw-r--r--.  2 root root 8.1M Dec 20 23:47 000193.sst
+-rw-r--r--.  2 root root 2.6M Dec 20 23:47 000194.sst
+-rw-r--r--.  1 root root   16 Dec 20 23:47 CURRENT
+-rw-r--r--.  1 root root    0 Dec 20 22:55 LOCK
+-rw-r--r--.  1 root root 1.5K Dec 20 23:48 LOG
+-rw-r--r--.  1 root root 2.7K Dec 20 23:41 LOG.old
+-rw-r--r--.  1 root root  29K Dec 20 23:48 MANIFEST-000188
+drwxr-xr-x.  2 root root 4.0K Dec 20 23:40 backup-foo
+```
+
+The parameters for the function are the port reference, and the name for this backup as a binary. A backup folder will be created in the database folder called `"backup-<NAME>"`
 
 ### Iteration: Priv, Next and First and Last
 
