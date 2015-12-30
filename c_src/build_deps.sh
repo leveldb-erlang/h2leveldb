@@ -27,11 +27,9 @@ set -e -o pipefail
 
 # Snappy 1.1.2
 SNAPPY_VSN=1ff9be9b8fafc8528ca9e055646f5932aa5db9c4
-#SNAPPY_VSN=HEAD
 
-# HyperLevelDB Apr 23, 2014
-LEVELDB_VSN=4b9bac17ab11527ea15af0ea3c8f1b825a9de18a
-#LEVELDB_VSN=HEAD
+# HyperLevelDB Sep 11, 2014
+LEVELDB_VSN=40ce80173a8d72443c5f92e3c072a54ed910bab9
 
 PLATFORM='unknown'
 unamestr=`uname`
@@ -84,8 +82,8 @@ BASEDIR="$PWD"
 
 case "$1" in
     clean)
-        rm -rf snappy snappy-$SNAPPY_VSN
-        rm -rf HyperLevelDB HyperLevelDB-$LEVELDB_VSN
+        rm -rf snappy snappy-*
+        rm -rf HyperLevelDB HyperLevelDB-*
         ;;
 
     get_deps)
@@ -99,6 +97,24 @@ case "$1" in
         fi
         ;;
 
+    update_deps)
+        # snappy
+        if [ ! -d $REBAR_DEPS_DIR/snappy ]; then
+            echo "$REBAR_DEPS_DIR/snappy not found. Please run ./rebar get-deps first."
+            echo
+            exit 8
+        fi
+        (cd $REBAR_DEPS_DIR/snappy && git checkout master && git pull origin master)
+
+        # HyperLevelDB
+        if [ ! -d $REBAR_DEPS_DIR/HyperLevelDB ]; then
+            echo "$REBAR_DEPS_DIR/HyperLevelDB not found. Please run ./rebar get-deps first."
+            echo
+            exit 8
+        fi
+        (cd $REBAR_DEPS_DIR/HyperLevelDB && git checkout master && git pull origin master)
+        ;;
+
     *)
         # snappy
         if [ ! -f $BASEDIR/snappy/lib/libsnappy.a ]; then
@@ -110,12 +126,12 @@ case "$1" in
                     echo "You must have GNU Autotools installed to compile h2leveldb."
                     echo "Please see README.md for more information."
                     echo
-                    exit -1
+                    exit 8
                 }
             }
 
-            (cd $REBAR_DEPS_DIR/snappy && git archive --format=tar \
-                --prefix=snappy-$SNAPPY_VSN/ $SNAPPY_VSN) \
+            (cd $REBAR_DEPS_DIR/snappy && git checkout $SNAPPY_VSN && \
+                git archive --format=tar --prefix=snappy-$SNAPPY_VSN/ $SNAPPY_VSN) \
                 | $TAR xf -
             (cd snappy-$SNAPPY_VSN && \
                 sed -ibak1 '/^AC_ARG_WITH.*$/, /^fi$/d' configure.ac && \
@@ -139,8 +155,8 @@ case "$1" in
 
         # HyperLevelDB
         if [ ! -f $BASEDIR/HyperLevelDB/lib/libhyperleveldb.a ]; then
-            (cd $REBAR_DEPS_DIR/HyperLevelDB && git archive --format=tar \
-                --prefix=HyperLevelDB-$LEVELDB_VSN/ $LEVELDB_VSN) \
+            (cd $REBAR_DEPS_DIR/HyperLevelDB && git checkout $LEVELDB_VSN && \
+                git archive --format=tar --prefix=HyperLevelDB-$LEVELDB_VSN/ $LEVELDB_VSN) \
                 | $TAR xf -
             (cd HyperLevelDB-$LEVELDB_VSN && \
                 autoreconf -i && \
@@ -150,7 +166,7 @@ case "$1" in
                 $MAKE && \
                 $MAKE .libs/libhyperleveldb.a && \
                 mkdir -p $BASEDIR/HyperLevelDB/include/hyperleveldb && \
-                install hyperleveldb/*.h $BASEDIR/HyperLevelDB/include/hyperleveldb && \
+                install include/hyperleveldb/*.h $BASEDIR/HyperLevelDB/include/hyperleveldb && \
                 mkdir -p $BASEDIR/HyperLevelDB/lib && \
                 install .libs/libhyperleveldb.a $BASEDIR/HyperLevelDB/lib/)
         fi
