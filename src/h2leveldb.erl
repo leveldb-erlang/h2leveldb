@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2014-2015 by Tatsuya Kawano <tatsuya@hibaridb.org>
+%%% Copyright (C) 2014-2016 by Tatsuya Kawano <tatsuya@hibaridb.org>
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
 %%% of this software and associated documentation files (the "Software"), to deal
