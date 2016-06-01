@@ -86,35 +86,6 @@ case "$1" in
         rm -rf HyperLevelDB HyperLevelDB-*
         ;;
 
-    get_deps)
-        # snappy
-        if [ ! -d $REBAR_DEPS_DIR/snappy ]; then
-            git clone git://github.com/leveldb-erlang/snappy.git $REBAR_DEPS_DIR/snappy
-        fi
-        # HyperLevelDB
-        if [ ! -d $REBAR_DEPS_DIR/HyperLevelDB ]; then
-             git clone git://github.com/leveldb-erlang/HyperLevelDB.git $REBAR_DEPS_DIR/HyperLevelDB
-        fi
-        ;;
-
-    update_deps)
-        # snappy
-        if [ ! -d $REBAR_DEPS_DIR/snappy ]; then
-            echo "$REBAR_DEPS_DIR/snappy not found. Please run ./rebar get-deps first."
-            echo
-            exit 8
-        fi
-        (cd $REBAR_DEPS_DIR/snappy && git checkout master && git pull origin master)
-
-        # HyperLevelDB
-        if [ ! -d $REBAR_DEPS_DIR/HyperLevelDB ]; then
-            echo "$REBAR_DEPS_DIR/HyperLevelDB not found. Please run ./rebar get-deps first."
-            echo
-            exit 8
-        fi
-        (cd $REBAR_DEPS_DIR/HyperLevelDB && git checkout master && git pull origin master)
-        ;;
-
     *)
         # snappy
         if [ ! -f $BASEDIR/snappy/lib/libsnappy.a ]; then
