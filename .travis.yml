@@ -1,5 +1,5 @@
 language: erlang
-script: "make clean deps compile xref test"
+script: "make clean get-deps compile xref test"
 otp_release:
   # DISABLED 18.1. Travis is failing by no reason
   # - 18.1
