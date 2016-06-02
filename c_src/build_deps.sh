@@ -88,7 +88,7 @@ case "$1" in
 
     *)
         # a workaround for a problem in Elixir Mix
-        if [ ! -f $REBAR_DEPS_DIR/snappy/.git ]; then
+        if [ ! -d $REBAR_DEPS_DIR/snappy/.git ]; then
             ORIGINAL_REBAR_DEPS_DIR="$REBAR_DEPS_DIR"
             REBAR_DEPS_DIR="$BASEDIR/../.."
             echo
