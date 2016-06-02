@@ -1,19 +1,26 @@
 
 REBAR?=./rebar
 
-.PHONY: all clean deps compile xref doc test eunit eqc proper triq \
-	compile-for-eunit compile-for-eqc compile-for-proper compile-for-triq
+.PHONY: all clean get-deps update-deps compile shell xref doc \
+    test eunit eqc proper triq \
+    compile-for-eunit compile-for-eqc compile-for-proper compile-for-triq
 
 all: compile
 
-deps:
+get-deps:
 	$(REBAR) get-deps
+
+update-deps:
+	$(REBAR) update-deps
 
 clean:
 	$(REBAR) clean -r
 
 compile:
 	$(REBAR) compile
+
+shell:
+	$(REBAR) shell
 
 xref:
 	$(REBAR) xref skip_deps=true
