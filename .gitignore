@@ -12,4 +12,3 @@ deps/
 ebin/
 erl_crash.dump
 priv/lib/
-*/*.beam
