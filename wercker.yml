@@ -14,9 +14,22 @@ dev: # centos7
       code: |
         yum -y install gcc gcc-c++ make autoconf automake libtool git
     - script:
+      name: print versions
+      code: |
+        cat /etc/centos-release
+        gcc --version
+        libtoolize --version
+        autoconf --version
+        automake --version
+    - script:
+      name: modify show-otp-version.escript
+      code: |
+        sed -i 's/ has been successfully installed.//g' /usr/local/erlang/show-otp-version.escript
+    - script:
       name: build h2leveldb (Erlang/OTP 18)
       code: |
         source /usr/local/erlang/18.3.3_hipe/activate
+        /usr/local/erlang/show-otp-version.escript
         make clean get-deps compile xref
         ls -l ./priv/lib/
         make test
@@ -24,6 +37,7 @@ dev: # centos7
       name: build h2leveldb (Erlang/OTP 17)
       code: |
         source /usr/local/erlang/17.5.6.8_hipe/activate
+        /usr/local/erlang/show-otp-version.escript
         make clean compile xref
         ls -l ./priv/lib/
         make test
@@ -36,9 +50,9 @@ build-trigger:
     registry: quay.io
   steps:
     - script:
-      name: triggering the pipeline
+      name: trigger other pipelines
       code: |
-        echo "triggering the pipeline"
+        echo "Triggering other pipelines."
 
 build-centos7:
   box:
@@ -51,9 +65,22 @@ build-centos7:
       code: |
         yum -y install gcc gcc-c++ make autoconf automake libtool git
     - script:
+      name: print versions
+      code: |
+        cat /etc/centos-release
+        gcc --version
+        libtoolize --version
+        autoconf --version
+        automake --version
+    - script:
+      name: modify show-otp-version.escript
+      code: |
+        sed -i 's/ has been successfully installed.//g' /usr/local/erlang/show-otp-version.escript
+    - script:
       name: build h2leveldb (Erlang/OTP 18)
       code: |
         source /usr/local/erlang/18.3.3_hipe/activate
+        /usr/local/erlang/show-otp-version.escript
         make clean get-deps compile xref
         ls -l ./priv/lib/
         make test
@@ -61,6 +88,7 @@ build-centos7:
       name: build h2leveldb (Erlang/OTP 17)
       code: |
         source /usr/local/erlang/17.5.6.8_hipe/activate
+        /usr/local/erlang/show-otp-version.escript
         make clean compile xref
         ls -l ./priv/lib/
         make test
@@ -88,13 +116,22 @@ build-centos6:
         cd /tmp
         rm -rf audomake-*
     - script:
-      name: build h2leveldb (Erlang/OTP 18)
+      name: print versions
       code: |
-        source /usr/local/erlang/18.3.3_hipe/activate
-        echo "PATH: $PATH"
+        cat /etc/centos-release
+        gcc --version
         libtoolize --version
         autoconf --version
         automake --version
+    - script:
+      name: modify show-otp-version.escript
+      code: |
+        sed -i 's/ has been successfully installed.//g' /usr/local/erlang/show-otp-version.escript
+    - script:
+      name: build h2leveldb (Erlang/OTP 18)
+      code: |
+        source /usr/local/erlang/18.3.3_hipe/activate
+        /usr/local/erlang/show-otp-version.escript
         make clean get-deps compile xref
         ls -l ./priv/lib/
         make test
@@ -102,6 +139,7 @@ build-centos6:
       name: build h2leveldb (Erlang/OTP 17)
       code: |
         source /usr/local/erlang/17.5.6.8_hipe/activate
+        /usr/local/erlang/show-otp-version.escript
         make clean compile xref
         ls -l ./priv/lib/
         make test
@@ -118,9 +156,21 @@ build-archlinux:
         pacman --noconfirm -Syu
         pacman --noconfirm -S gcc make autoconf automake libtool git
     - script:
+      name: print versions
+      code: |
+        gcc --version
+        libtoolize --version
+        autoconf --version
+        automake --version
+    - script:
+      name: modify show-otp-version.escript
+      code: |
+        sed -i 's/ has been successfully installed.//g' /usr/local/erlang/show-otp-version.escript
+    - script:
       name: build h2leveldb (Erlang/OTP 18)
       code: |
         source /usr/local/erlang/18.3.3_hipe/activate
+        /usr/local/erlang/show-otp-version.escript
         make clean get-deps compile xref
         ls -l ./priv/lib/
         make test
@@ -128,6 +178,7 @@ build-archlinux:
       name: build h2leveldb (Erlang/OTP 17)
       code: |
         source /usr/local/erlang/17.5.6.8_hipe/activate
+        /usr/local/erlang/show-otp-version.escript
         make clean compile xref
         ls -l ./priv/lib/
         make test
