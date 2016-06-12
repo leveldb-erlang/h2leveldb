@@ -677,7 +677,13 @@ init() ->
     Path =
         case code:priv_dir(h2leveldb) of
             {error, bad_name} ->
-                "./priv/lib";
+                Dir = "./prv/lib",
+                case filelib:is_dir(Dir) of
+                    true ->
+                        Dir;
+                    false ->
+                        "../priv/lib"
+                end;
             Dir ->
                 filename:join([Dir, "lib"])
         end,
@@ -690,9 +696,14 @@ init() ->
             ok;
         {error, {open_error, _}=Err} ->
             FormattedErr = erl_ddll:format_error(Err),
+            WorkDir = case file:get_cwd() of
+                {ok, CWD} -> CWD;
+                {error, _} -> "unknown"
+            end,
             error_logger:error_msg("Failed to load the driver library h2leveldb_impl_drv. "
-                                   ++ "Error: ~p, Path: ~p~n",
+                                   ++ "Error: ~p, Current Work Dir: ~p, Path: ~p~n",
                                    [FormattedErr,
+                                    WorkDir,
                                     filename:join(Path, h2leveldb_impl_drv)
                                    ]),
             erlang:error({Err, FormattedErr});

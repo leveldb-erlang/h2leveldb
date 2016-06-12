@@ -1,7 +1,7 @@
 
-## h2leveldb - HyperLevelDB bindings for Erlang/OTP
+## h2leveldb - HyperLevelDB bindings for Erlang/OTP [![wercker status](https://app.wercker.com/status/754e6bbdcdb482588b775193ae9314c2/s "wercker status")](https://app.wercker.com/project/bykey/754e6bbdcdb482588b775193ae9314c2)
 
-Copyright (c) 2014-2015 by Tatsuya Kawano
+Copyright (c) 2014-2016 by Tatsuya Kawano
 
 **Authors:** Tatsuya Kawano ([`tatsuya@hibaridb.org`](mailto:tatsuya@hibaridb.org)).
 Also see the [Credits](#credits) chapter. h2leveldb borrowed port
