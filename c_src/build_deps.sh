@@ -116,6 +116,11 @@ case "$1" in
         ;;
 
     *)
+        # a workaround for a problem in Elixir Mix
+        if [ ! -d $REBAR_DEPS_DIR/snappy/.git ]; then
+            REBAR_DEPS_DIR="$BASEDIR/../.."
+        fi
+
         # snappy
         if [ ! -f $BASEDIR/snappy/lib/libsnappy.a ]; then
             LIBTOOLIZE=libtoolize
