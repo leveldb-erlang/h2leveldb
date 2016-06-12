@@ -1,0 +1,133 @@
+box: busybox
+
+# This pipeline uses "per-pipeline containers"
+# http://devcenter.wercker.com/docs/pipelines/per-pipeline-containers.html
+
+dev: # centos7
+  box:
+    id: quay.io/tatsuya6502/erlang
+    tag: centos7-multi-otp
+    registry: quay.io
+  steps:
+    - script:
+      name: install build dependencies
+      code: |
+        yum -y install gcc gcc-c++ make autoconf automake libtool git
+    - script:
+      name: build h2leveldb (Erlang/OTP 18)
+      code: |
+        source /usr/local/erlang/18.3.3_hipe/activate
+        make clean get-deps compile xref
+        ls -l ./priv/lib/
+        make test
+    - script:
+      name: build h2leveldb (Erlang/OTP 17)
+      code: |
+        source /usr/local/erlang/17.5.6.8_hipe/activate
+        make clean compile xref
+        ls -l ./priv/lib/
+        make test
+
+build-trigger:
+  # I do not know why, but if I am not overriding busybox here, the env step will fail.
+  box:
+    id: quay.io/tatsuya6502/erlang
+    tag: centos7-multi-otp
+    registry: quay.io
+  steps:
+    - script:
+      name: triggering the pipeline
+      code: |
+        echo "triggering the pipeline"
+
+build-centos7:
+  box:
+    id: quay.io/tatsuya6502/erlang
+    tag: centos7-multi-otp
+    registry: quay.io
+  steps:
+    - script:
+      name: install build dependencies
+      code: |
+        yum -y install gcc gcc-c++ make autoconf automake libtool git
+    - script:
+      name: build h2leveldb (Erlang/OTP 18)
+      code: |
+        source /usr/local/erlang/18.3.3_hipe/activate
+        make clean get-deps compile xref
+        ls -l ./priv/lib/
+        make test
+    - script:
+      name: build h2leveldb (Erlang/OTP 17)
+      code: |
+        source /usr/local/erlang/17.5.6.8_hipe/activate
+        make clean compile xref
+        ls -l ./priv/lib/
+        make test
+
+build-centos6:
+  box:
+    id: quay.io/tatsuya6502/erlang
+    tag: centos6-multi-otp
+    registry: quay.io
+  steps:
+    - script:
+      name: install build dependencies
+      code: |
+        yum -y install gcc gcc-c++ make libtool git wget
+    - script:
+      name: build and install automake (required by snappy)
+      code: |
+        cd /tmp
+        wget http://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz
+        tar xvf automake-1.15.tar.gz
+        cd automake-1.15
+        ./configure --prefix=/usr
+        make
+        make install
+        cd /tmp
+        rm -rf audomake-*
+    - script:
+      name: build h2leveldb (Erlang/OTP 18)
+      code: |
+        source /usr/local/erlang/18.3.3_hipe/activate
+        echo "PATH: $PATH"
+        libtoolize --version
+        autoconf --version
+        automake --version
+        make clean get-deps compile xref
+        ls -l ./priv/lib/
+        make test
+    - script:
+      name: build h2leveldb (Erlang/OTP 17)
+      code: |
+        source /usr/local/erlang/17.5.6.8_hipe/activate
+        make clean compile xref
+        ls -l ./priv/lib/
+        make test
+
+build-archlinux:
+  box:
+    id: quay.io/tatsuya6502/erlang
+    tag: archlinux-multi-otp
+    registry: quay.io
+  steps:
+    - script:
+      name: install build dependencies
+      code: |
+        pacman --noconfirm -Syu
+        pacman --noconfirm -S gcc make autoconf automake libtool git
+    - script:
+      name: build h2leveldb (Erlang/OTP 18)
+      code: |
+        source /usr/local/erlang/18.3.3_hipe/activate
+        make clean get-deps compile xref
+        ls -l ./priv/lib/
+        make test
+    - script:
+      name: build h2leveldb (Erlang/OTP 17)
+      code: |
+        source /usr/local/erlang/17.5.6.8_hipe/activate
+        make clean compile xref
+        ls -l ./priv/lib/
+        make test
